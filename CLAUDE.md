@@ -20,6 +20,7 @@
 ```
 src/
 ├── index.ts                 # 主入口，路由分发
+├── env.d.ts                 # 环境变量类型扩展 (secrets)
 ├── services/
 │   ├── index.ts             # 服务导出
 │   ├── store/               # R2 文件存储服务
@@ -32,7 +33,12 @@ src/
 │       ├── types.ts         # 类型定义
 │       └── providers/       # Provider 实现
 │           ├── index.ts
-│           └── aegir.ts     # Aegir provider
+│           ├── aegir.ts     # Aegir provider (代理)
+│           └── gemini/      # Gemini provider (视觉模型)
+│               ├── index.ts # Gemini 路由
+│               └── geetest/ # GeeTest 验证码
+│                   ├── index.ts
+│                   └── slider.ts  # 滑块验证码
 └── utils/
     ├── index.ts
     ├── response.ts          # HTTP 响应工具
@@ -63,6 +69,17 @@ npm run cf-typegen  # 生成 Worker 类型定义
 
 - **R2 Bucket**: `CAPTCHA_BUCKET` → `captcha-store`
 
+## Secrets (敏感配置)
+
+通过 `wrangler secret put` 设置，不要提交到代码仓库：
+
+```bash
+wrangler secret put GEMINI_API_KEY    # Gemini API 密钥
+wrangler secret put GEMINI_BASE_URL   # Gemini API 基础 URL
+```
+
+类型定义在 `src/env.d.ts` 中声明。
+
 ## 核心模式
 
 ### 请求处理模式
@@ -79,8 +96,29 @@ function handle{Service}Request(
 ### Provider 模式 (Solver)
 
 Solver 服务使用可插拔的 Provider 模式：
-- `aegir` - 已实现，代理到 `http://114.132.98.164:8899`
-- `gemini` - 占位符，待实现
+- `aegir` - 代理到 Aegir 验证码解决 API
+- `gemini` - 使用 Gemini 视觉模型解决滑块验证码
+
+#### Gemini Provider API
+
+**POST** `/solver/gemini/geetest/slider`
+
+请求体：
+```json
+{
+  "image": "base64编码的图片或data URL"
+}
+```
+
+响应：
+```json
+{
+  "success": true,
+  "data": [{ "x": 195, "y": 96 }]
+}
+```
+
+支持的图片格式：PNG、JPEG。会自动从图片二进制数据解析宽高。
 
 ### 验证模式
 
@@ -99,10 +137,11 @@ validateFileItem(item)       // 验证单个文件项
 
 ## 添加新 Solver Provider
 
-1. 在 `src/services/solver/providers/` 创建新文件
-2. 实现请求处理函数
-3. 在 `src/services/solver/providers/index.ts` 导出
-4. 在 `src/services/solver/index.ts` 添加路由
+1. 在 `src/services/solver/providers/{provider}/` 创建目录
+2. 按 `{vendor}/{type}.ts` 结构组织处理器
+3. 在 `providers/{provider}/index.ts` 实现路由
+4. 在 `src/services/solver/providers/index.ts` 导出
+5. 在 `src/services/solver/index.ts` 添加 provider 路由
 
 ## 部署
 
@@ -115,8 +154,10 @@ validateFileItem(item)       // 验证单个文件项
 | 文件 | 作用 |
 |------|------|
 | `src/index.ts` | Worker 入口，统一路由分发，CORS 处理 |
+| `src/env.d.ts` | 环境变量类型扩展 (secrets) |
 | `src/services/store/handlers.ts` | 文件上传到 R2 和从 R2 获取的核心逻辑 |
 | `src/services/solver/providers/aegir.ts` | Aegir 验证码服务代理实现 |
+| `src/services/solver/providers/gemini/geetest/slider.ts` | Gemini 滑块验证码解决器 |
 | `src/utils/response.ts` | HTTP 响应辅助函数 (JSON/Binary/CORS) |
 | `src/utils/encoding.ts` | Base64/Data URL 解码 |
 

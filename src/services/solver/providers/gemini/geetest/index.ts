@@ -1,0 +1,1 @@
+export { handleSlider } from './slider';
