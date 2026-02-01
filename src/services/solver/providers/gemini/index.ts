@@ -9,7 +9,7 @@
  */
 
 import { jsonResponse, corsPreflightResponse } from '../../../../utils';
-import { handleSlider as handleGeetestSlider } from './geetest';
+import { handleSlider as handleGeetestSlider, handleWord as handleGeetestWord, handleIcon as handleGeetestIcon } from './geetest';
 
 /**
  * Handle requests to Gemini solver.
@@ -36,17 +36,21 @@ export async function handleGeminiRequest(request: Request, env: Env, path: stri
 
 	// Route to vendor/type handler
 	if (vendor === 'geetest') {
-		if (type === 'slider') {
-			return handleGeetestSlider(request, env);
+		switch (type) {
+			case 'slider':
+				return handleGeetestSlider(request, env);
+			case 'word':
+				return handleGeetestWord(request, env);
+			case 'icon':
+				return handleGeetestIcon(request, env);
 		}
-		// Future: icon, word
 	}
 
 	return jsonResponse(
 		{
 			success: false,
 			error: `Unsupported: vendor=${vendor}, type=${type}`,
-			supported: [{ vendor: 'geetest', types: ['slider'] }],
+			supported: [{ vendor: 'geetest', types: ['slider', 'word', 'icon'] }],
 		},
 		404
 	);
