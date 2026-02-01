@@ -53,6 +53,7 @@ export async function handleIcon(request: Request, env: Env): Promise<Response> 
 		return jsonResponse({ success: false, error: 'Missing required field: image' }, 400);
 	}
 
+	const startTime = Date.now();
 	const { mimeType, base64Data } = parseImageInput(body.image);
 
 	const buffer = base64ToArrayBuffer(base64Data);
@@ -68,6 +69,8 @@ export async function handleIcon(request: Request, env: Env): Promise<Response> 
 
 	try {
 		const text = await callGeminiVision(env, PROMPT, mimeType, base64Data);
+		const elapsed = Date.now() - startTime;
+
 		const results = parseJsonResponse<Array<{ x_percent: number; y_percent: number }>>(text);
 
 		if (!Array.isArray(results) || results.length === 0) {
@@ -85,7 +88,7 @@ export async function handleIcon(request: Request, env: Env): Promise<Response> 
 			y: Math.round(height * r.y_percent / 100),
 		}));
 
-		return jsonResponse({ success: true, data });
+		return jsonResponse({ success: true, elapsed, data });
 	} catch (error) {
 		console.error('Gemini icon solver error:', error);
 		return jsonResponse(

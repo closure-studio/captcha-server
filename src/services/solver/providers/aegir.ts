@@ -30,6 +30,7 @@ export async function handleAegirRequest(
         return corsPreflightResponse();
     }
 
+    const startTime = Date.now();
     const url = new URL(request.url);
     const targetUrl = AEGIR_API + path + url.search;
 
@@ -43,8 +44,24 @@ export async function handleAegirRequest(
             },
             body: request.method !== 'GET' ? await request.text() : undefined,
         });
+        const elapsed = Date.now() - startTime;
 
-        // Create new response with CORS headers
+        // Parse original response and inject elapsed time
+        const contentType = response.headers.get('Content-Type') || '';
+        if (contentType.includes('application/json')) {
+            const originalData = await response.json() as Record<string, unknown>;
+            const newData = { ...originalData, elapsed };
+            return new Response(JSON.stringify(newData), {
+                status: response.status,
+                statusText: response.statusText,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...CORS_HEADERS,
+                },
+            });
+        }
+
+        // For non-JSON responses, return as-is
         return new Response(response.body, {
             status: response.status,
             statusText: response.statusText,

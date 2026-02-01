@@ -48,6 +48,7 @@ export async function handleSlider(request: Request, env: Env): Promise<Response
 		return jsonResponse({ success: false, error: 'Missing required field: image' }, 400);
 	}
 
+	const startTime = Date.now();
 	const { mimeType, base64Data } = parseImageInput(body.image);
 
 	const buffer = base64ToArrayBuffer(base64Data);
@@ -63,6 +64,8 @@ export async function handleSlider(request: Request, env: Env): Promise<Response
 
 	try {
 		const text = await callGeminiVision(env, PROMPT, mimeType, base64Data);
+		const elapsed = Date.now() - startTime;
+
 		const result = parseJsonResponse<{ x_percent: number; y_percent: number }>(text);
 
 		if (typeof result.x_percent !== 'number' || typeof result.y_percent !== 'number') {
@@ -72,7 +75,7 @@ export async function handleSlider(request: Request, env: Env): Promise<Response
 		const x = Math.round(width * result.x_percent / 100);
 		const y = Math.round(height * result.y_percent / 100);
 
-		return jsonResponse({ success: true, data: [{ x, y }] });
+		return jsonResponse({ success: true, elapsed, data: [{ x, y }] });
 	} catch (error) {
 		console.error('Gemini slider solver error:', error);
 		return jsonResponse(
