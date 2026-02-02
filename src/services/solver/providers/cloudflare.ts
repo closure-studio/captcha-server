@@ -24,12 +24,8 @@ async function callVision(
 	prompt: string,
 	mimeType: string,
 	base64Data: string
-): Promise<string> {
+): Promise<unknown> {
 	const dataUrl = `data:${mimeType};base64,${base64Data}`;
-
-	console.log('[cloudflare] Calling Workers AI model:', MODEL);
-	console.log('[cloudflare] Prompt length:', prompt.length);
-	console.log('[cloudflare] Image data URL length:', dataUrl.length);
 
 	const response = await env.AI.run(MODEL, {
 		messages: [
@@ -44,39 +40,12 @@ async function callVision(
 		max_tokens: 512,
 	});
 
-	console.log('[cloudflare] Raw response type:', typeof response);
-	console.log('[cloudflare] Raw response:', JSON.stringify(response, null, 2));
-
-	// Handle different response formats
-	let text: string | null = null;
-
-	if (typeof response === 'string') {
-		text = response;
-	} else if (typeof response === 'object' && response !== null) {
-		if ('response' in response) {
-			text = (response as { response: string }).response;
-		} else if ('text' in response) {
-			text = (response as { text: string }).text;
-		} else if ('content' in response) {
-			text = (response as { content: string }).content;
-		} else if ('choices' in response && Array.isArray((response as { choices: unknown[] }).choices)) {
-			const choices = (response as { choices: Array<{ message?: { content?: string }; text?: string }> }).choices;
-			if (choices[0]?.message?.content) {
-				text = choices[0].message.content;
-			} else if (choices[0]?.text) {
-				text = choices[0].text;
-			}
-		}
+	// Response format: { response: string | object, tool_calls: [], usage: {...} }
+	if (typeof response === 'object' && response !== null && 'response' in response) {
+		return (response as { response: unknown }).response;
 	}
 
-	console.log('[cloudflare] Extracted text type:', typeof text);
-	console.log('[cloudflare] Extracted text:', text);
-
-	if (!text || typeof text !== 'string') {
-		throw new Error(`Unexpected response format from Workers AI: ${JSON.stringify(response)}`);
-	}
-
-	return text;
+	throw new Error(`Unexpected response format from Workers AI: ${JSON.stringify(response)}`);
 }
 
 export const cloudflareSolver: Solver = {
@@ -95,22 +64,32 @@ export const cloudflareSolver: Solver = {
 		imageData: ImageData
 	): Promise<PercentPoint[]> {
 		const prompt = DEFAULT_PROMPTS[type];
-		const text = await callVision(env, prompt, imageData.mimeType, imageData.base64Data);
+		const result = await callVision(env, prompt, imageData.mimeType, imageData.base64Data);
+
+		// Response can be either a string (needs parsing) or already parsed object
+		let parsed: unknown;
+		if (typeof result === 'string') {
+			parsed = parseJsonResponse(result);
+		} else {
+			parsed = result;
+		}
 
 		if (type === 'slider') {
 			// Slider returns a single point
-			const result = parseJsonResponse<PercentPoint>(text);
-			if (!validatePercentPoint(result)) {
-				throw new Error(`Invalid response format: ${text}`);
+			if (validatePercentPoint(parsed)) {
+				return [parsed];
 			}
-			return [result];
+			// Model might return array even for slider
+			if (validatePercentPoints(parsed)) {
+				return parsed;
+			}
+			throw new Error(`Invalid response format: ${JSON.stringify(parsed)}`);
 		} else {
 			// Icon and word return multiple points
-			const results = parseJsonResponse<PercentPoint[]>(text);
-			if (!validatePercentPoints(results)) {
-				throw new Error(`Invalid response format: ${text}`);
+			if (validatePercentPoints(parsed)) {
+				return parsed;
 			}
-			return results;
+			throw new Error(`Invalid response format: ${JSON.stringify(parsed)}`);
 		}
 	},
 };
