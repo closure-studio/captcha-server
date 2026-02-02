@@ -6,7 +6,7 @@
  * Providers:
  * - aegir: Aegir solver API (mock)
  * - gemini: Google Gemini vision model
- * - meta: Cloudflare Workers AI (Llama Vision)
+ * - cloudflare: Cloudflare Workers AI (Llama Vision)
  *
  * Vendors:
  * - geetest: GeeTest captcha

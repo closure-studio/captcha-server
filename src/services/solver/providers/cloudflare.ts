@@ -43,8 +43,8 @@ async function callMetaVision(
 	return text;
 }
 
-export const metaSolver: Solver = {
-	name: 'meta',
+export const cloudflareSolver: Solver = {
+	name: 'cloudflare',
 
 	supported: [{ vendor: 'geetest', types: ['slider', 'icon', 'word'] }],
 

@@ -1,6 +1,6 @@
 /**
  * Prompts for different captcha types
- * Used by vision-based solvers (Gemini, Meta)
+ * Used by vision-based solvers (Gemini, Cloudflare)
  */
 
 import type { CaptchaType } from './types';

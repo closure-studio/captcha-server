@@ -7,21 +7,21 @@
 import { createSolverHandler } from '../handler';
 import { aegirSolver } from './aegir';
 import { geminiSolver } from './gemini';
-import { metaSolver } from './meta';
+import { cloudflareSolver } from './cloudflare';
 import type { Solver, SolverProvider } from '../types';
 
 /** All available solvers */
 export const solvers: Record<SolverProvider, Solver> = {
 	aegir: aegirSolver,
 	gemini: geminiSolver,
-	meta: metaSolver,
+	cloudflare: cloudflareSolver,
 };
 
 /** Pre-created handlers for each solver */
 export const handlers: Record<SolverProvider, ReturnType<typeof createSolverHandler>> = {
 	aegir: createSolverHandler(aegirSolver),
 	gemini: createSolverHandler(geminiSolver),
-	meta: createSolverHandler(metaSolver),
+	cloudflare: createSolverHandler(cloudflareSolver),
 };
 
 /** Get handler for a provider */
