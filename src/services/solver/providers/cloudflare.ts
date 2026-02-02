@@ -19,12 +19,7 @@ const MODEL = '@cf/meta/llama-4-scout-17b-16e-instruct';
  *
  * @see https://developers.cloudflare.com/workers-ai/models/llama-3.2-11b-vision-instruct/
  */
-async function callVision(
-	env: Env,
-	prompt: string,
-	mimeType: string,
-	base64Data: string
-): Promise<unknown> {
+async function callVision(env: Env, prompt: string, mimeType: string, base64Data: string): Promise<unknown> {
 	const dataUrl = `data:${mimeType};base64,${base64Data}`;
 
 	const response = await env.AI.run(MODEL, {
@@ -37,7 +32,6 @@ async function callVision(
 				],
 			},
 		],
-		max_tokens: 512,
 	});
 
 	// Response format: { response: string | object, tool_calls: [], usage: {...} }
@@ -57,12 +51,7 @@ export const cloudflareSolver: Solver = {
 		return !!env.AI;
 	},
 
-	async solve(
-		env: Env,
-		_vendor: CaptchaVendor,
-		type: CaptchaType,
-		imageData: ImageData
-	): Promise<PercentPoint[]> {
+	async solve(env: Env, _vendor: CaptchaVendor, type: CaptchaType, imageData: ImageData): Promise<PercentPoint[]> {
 		const prompt = DEFAULT_PROMPTS[type];
 		const result = await callVision(env, prompt, imageData.mimeType, imageData.base64Data);
 
