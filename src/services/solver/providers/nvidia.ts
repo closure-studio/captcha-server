@@ -8,7 +8,7 @@
 import type { Solver, CaptchaVendor, CaptchaType, ImageData, PercentPoint } from '../types';
 import { parseJsonResponse, validatePercentPoint, validatePercentPoints } from '../utils';
 
-const INVOKE_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
+const INVOKE_URL = 'https://ai.api.nvidia.com/v1/gr/meta/llama-3.2-90b-vision-instruct/chat/completions';
 const MODEL = 'meta/llama-3.2-90b-vision-instruct';
 
 /**
@@ -78,6 +78,10 @@ interface NvidiaResponse {
 
 /**
  * Call NVIDIA NIM Vision API.
+ *
+ * Per NVIDIA docs:
+ * - system/assistant roles only support string content
+ * - user role supports object array with image_url type
  */
 async function callNvidiaVision(env: Env, prompt: string, mimeType: string, base64Data: string): Promise<string> {
 	const dataUrl = `data:${mimeType};base64,${base64Data}`;
@@ -92,8 +96,8 @@ async function callNvidiaVision(env: Env, prompt: string, mimeType: string, base
 			{
 				role: 'user',
 				content: [
-					{ type: 'text', text: prompt },
 					{ type: 'image_url', image_url: { url: dataUrl } },
+					{ type: 'text', text: prompt },
 				],
 			},
 		],
