@@ -1,34 +1,43 @@
 /**
- * Meta Llama Vision Solver Provider
+ * Cloudflare Workers AI Vision Solver Provider
  *
  * Uses Cloudflare Workers AI with llama-3.2-11b-vision-instruct model.
  * Requires AI binding in wrangler.jsonc.
  */
 
 import type { Solver, CaptchaVendor, CaptchaType, ImageData, PercentPoint } from '../types';
-import { base64ToUint8Array, parseJsonResponse, validatePercentPoint, validatePercentPoints } from '../utils';
+import { parseJsonResponse, validatePercentPoint, validatePercentPoints } from '../utils';
 import { DEFAULT_PROMPTS } from '../prompts';
 
 const MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
 
 /**
- * Call Meta Llama Vision model via Cloudflare Workers AI.
+ * Call Llama Vision model via Cloudflare Workers AI.
+ *
+ * Uses messages format with image_url content type (data URL).
+ * HTTP URLs are not supported, only base64 data URLs.
+ *
+ * @see https://developers.cloudflare.com/workers-ai/models/llama-3.2-11b-vision-instruct/
  */
-async function callMetaVision(
+async function callVision(
 	env: Env,
 	prompt: string,
+	mimeType: string,
 	base64Data: string
 ): Promise<string> {
+	const dataUrl = `data:${mimeType};base64,${base64Data}`;
+
 	const response = await env.AI.run(MODEL, {
 		messages: [
 			{
 				role: 'user',
 				content: [
 					{ type: 'text', text: prompt },
-					{ type: 'image', image: base64ToUint8Array(base64Data) },
+					{ type: 'image_url', image_url: { url: dataUrl } },
 				],
 			},
 		],
+		max_tokens: 512,
 	});
 
 	const text = typeof response === 'object' && 'response' in response
@@ -58,7 +67,7 @@ export const cloudflareSolver: Solver = {
 		imageData: ImageData
 	): Promise<PercentPoint[]> {
 		const prompt = DEFAULT_PROMPTS[type];
-		const text = await callMetaVision(env, prompt, imageData.base64Data);
+		const text = await callVision(env, prompt, imageData.mimeType, imageData.base64Data);
 
 		if (type === 'slider') {
 			// Slider returns a single point
