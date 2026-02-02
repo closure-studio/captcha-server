@@ -29,7 +29,6 @@ async function callMetaVision(
 				],
 			},
 		],
-		max_tokens: 512,
 	});
 
 	const text = typeof response === 'object' && 'response' in response
