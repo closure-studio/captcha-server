@@ -45,22 +45,29 @@ Only JSON. No explanation.
 `,
 
 	word: `
-You are solving a GeeTest word-click CAPTCHA.
+You are analyzing a GeeTest CAPTCHA image with Chinese characters.
 
-The image has a hint bar showing Chinese characters/words in a specific order.
-Those same characters appear scattered across the main image area.
+CRITICAL REQUIREMENTS:
+1. The hint bar (usually at top) shows target characters in a SPECIFIC ORDER
+2. You must find each character's CENTER point in the main area
+3. Coordinates MUST be returned in the EXACT SAME ORDER as the hint bar
 
-Your task:
-1. Identify the target characters from the hint bar (left to right).
-2. Locate each target character's CENTER position in the main image area.
-3. Return their positions IN THE SAME ORDER as the hint, as percentages of image width and height.
+STEP-BY-STEP PROCESS:
+Step 1: Carefully read the hint bar from left to right. List each character.
+Step 2: For each character in order, scan the main image area to find it.
+Step 3: Identify the visual CENTER of each character (not edge).
+Step 4: Calculate position as percentage: 
+   - x_percent = (center_x / image_width) × 100
+   - y_percent = (center_y / image_height) × 100
 
-Return a JSON array of objects, one per character, in order:
-[{"x_percent": number, "y_percent": number}, ...]
+ACCURACY TIPS:
+- Ignore similar-looking but different characters
+- If a character appears multiple times, choose the most clearly visible one
+- Double-check the order matches the hint bar exactly
 
-Example for 4 characters:
-[{"x_percent": 20, "y_percent": 55}, {"x_percent": 45, "y_percent": 70}, {"x_percent": 65, "y_percent": 45}, {"x_percent": 80, "y_percent": 60}]
+OUTPUT FORMAT (JSON only, no explanation):
+[{"x_percent": 20.5, "y_percent": 55.3}, {"x_percent": 45.2, "y_percent": 70.1}, ...]
 
-Only JSON. No explanation.
+Number of objects in array MUST equal number of characters in hint bar.
 `,
 };
