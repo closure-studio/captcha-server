@@ -4,6 +4,9 @@
  * Secrets (set via `wrangler secret put`):
  * - GEMINI_API_KEY: API key for the Gemini service
  * - GEMINI_BASE_URL: Base URL of the Gemini API endpoint
+ *
+ * Bindings (configured in wrangler.jsonc):
+ * - AI: Cloudflare Workers AI binding
  */
 
 declare global {
@@ -11,6 +14,9 @@ declare global {
 		// Secrets for Gemini provider
 		GEMINI_API_KEY: string;
 		GEMINI_BASE_URL: string;
+
+		// Workers AI binding for Meta provider
+		AI: Ai;
 	}
 }
 

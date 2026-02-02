@@ -15,7 +15,10 @@
 			"binding": "CAPTCHA_BUCKET",
 			"bucket_name": "captcha-store"
 		}
-	]
+	],
+	"ai": {
+		"binding": "AI"
+	}
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

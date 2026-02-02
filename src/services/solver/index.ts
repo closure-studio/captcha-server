@@ -18,12 +18,13 @@
  */
 
 import { jsonResponse, corsPreflightResponse } from '../../utils';
-import { handleAegirRequest, handleGeminiRequest } from './providers';
+import { handleAegirRequest, handleGeminiRequest, handleMetaRequest } from './providers';
 
 /** Available solver providers */
 const PROVIDERS = {
     AEGIR: 'aegir',
     GEMINI: 'gemini',
+    META: 'meta',
 } as const;
 
 /**
@@ -55,6 +56,9 @@ export async function handleSolverRequest(
 
         case PROVIDERS.GEMINI:
             return handleGeminiRequest(request, env, remainingPath);
+
+        case PROVIDERS.META:
+            return handleMetaRequest(request, env, remainingPath);
 
         default:
             return jsonResponse(
