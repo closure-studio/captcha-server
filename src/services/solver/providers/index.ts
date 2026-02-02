@@ -8,6 +8,7 @@ import { createSolverHandler } from '../handler';
 import { aegirSolver } from './aegir';
 import { geminiSolver } from './gemini';
 import { cloudflareSolver } from './cloudflare';
+import { nvidiaSolver } from './nvidia';
 import type { Solver, SolverProvider } from '../types';
 
 /** All available solvers */
@@ -15,6 +16,7 @@ export const solvers: Record<SolverProvider, Solver> = {
 	aegir: aegirSolver,
 	gemini: geminiSolver,
 	cloudflare: cloudflareSolver,
+	nvidia: nvidiaSolver,
 };
 
 /** Pre-created handlers for each solver */
@@ -22,6 +24,7 @@ export const handlers: Record<SolverProvider, ReturnType<typeof createSolverHand
 	aegir: createSolverHandler(aegirSolver),
 	gemini: createSolverHandler(geminiSolver),
 	cloudflare: createSolverHandler(cloudflareSolver),
+	nvidia: createSolverHandler(nvidiaSolver),
 };
 
 /** Get handler for a provider */

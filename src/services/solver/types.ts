@@ -9,7 +9,7 @@ export type CaptchaVendor = 'geetest';
 export type CaptchaType = 'slider' | 'icon' | 'word';
 
 /** Supported solver providers */
-export type SolverProvider = 'aegir' | 'gemini' | 'cloudflare';
+export type SolverProvider = 'aegir' | 'gemini' | 'cloudflare' | 'nvidia';
 
 /** Point with percentage coordinates (0-100) */
 export interface PercentPoint {

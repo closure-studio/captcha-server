@@ -15,6 +15,9 @@ declare global {
 		GEMINI_API_KEY: string;
 		GEMINI_BASE_URL: string;
 
+		// Secret for NVIDIA provider
+		NVIDIA_API_KEY: string;
+
 		// Workers AI binding for Meta provider
 		AI: Ai;
 	}
