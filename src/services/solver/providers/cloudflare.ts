@@ -27,6 +27,10 @@ async function callVision(
 ): Promise<string> {
 	const dataUrl = `data:${mimeType};base64,${base64Data}`;
 
+	console.log('[cloudflare] Calling Workers AI model:', MODEL);
+	console.log('[cloudflare] Prompt length:', prompt.length);
+	console.log('[cloudflare] Image data URL length:', dataUrl.length);
+
 	const response = await env.AI.run(MODEL, {
 		messages: [
 			{
@@ -40,12 +44,36 @@ async function callVision(
 		max_tokens: 512,
 	});
 
-	const text = typeof response === 'object' && 'response' in response
-		? (response as { response: string }).response
-		: null;
+	console.log('[cloudflare] Raw response type:', typeof response);
+	console.log('[cloudflare] Raw response:', JSON.stringify(response, null, 2));
 
-	if (!text) {
-		throw new Error('Empty response from Workers AI');
+	// Handle different response formats
+	let text: string | null = null;
+
+	if (typeof response === 'string') {
+		text = response;
+	} else if (typeof response === 'object' && response !== null) {
+		if ('response' in response) {
+			text = (response as { response: string }).response;
+		} else if ('text' in response) {
+			text = (response as { text: string }).text;
+		} else if ('content' in response) {
+			text = (response as { content: string }).content;
+		} else if ('choices' in response && Array.isArray((response as { choices: unknown[] }).choices)) {
+			const choices = (response as { choices: Array<{ message?: { content?: string }; text?: string }> }).choices;
+			if (choices[0]?.message?.content) {
+				text = choices[0].message.content;
+			} else if (choices[0]?.text) {
+				text = choices[0].text;
+			}
+		}
+	}
+
+	console.log('[cloudflare] Extracted text type:', typeof text);
+	console.log('[cloudflare] Extracted text:', text);
+
+	if (!text || typeof text !== 'string') {
+		throw new Error(`Unexpected response format from Workers AI: ${JSON.stringify(response)}`);
 	}
 
 	return text;
