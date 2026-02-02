@@ -9,7 +9,7 @@ import type { Solver, CaptchaVendor, CaptchaType, ImageData, PercentPoint } from
 import { parseJsonResponse, validatePercentPoint, validatePercentPoints } from '../utils';
 import { DEFAULT_PROMPTS } from '../prompts';
 
-const MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
+const MODEL = '@cf/meta/llama-4-scout-17b-16e-instruct';
 
 /**
  * Call Llama Vision model via Cloudflare Workers AI.
