@@ -1,89 +1,76 @@
 /**
  * Aegir Solver Provider
  *
- * Proxies requests to the Aegir captcha solving API
+ * TODO: Currently returns mock data. Replace with actual Aegir API integration
+ * when response format is known.
  */
 
-import { corsPreflightResponse } from '../../../utils';
+import type { Solver, CaptchaVendor, CaptchaType, ImageData, PercentPoint } from '../types';
 
 const AEGIR_API = 'http://114.132.98.164:8899';
 
-const CORS_HEADERS = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
+/**
+ * Generate mock slider response
+ */
+function mockSlider(dimensions: { width: number; height: number }): PercentPoint[] {
+	return [{ x_percent: 65, y_percent: 50 }];
+}
 
 /**
- * Handle requests to Aegir solver
- * @param request - Incoming request
- * @param env - Environment bindings
- * @param path - Path after /solver/aegir (e.g., "/geetest/icon/...")
+ * Generate mock icon response
  */
-export async function handleAegirRequest(
-    request: Request,
-    env: Env,
-    path: string
-): Promise<Response> {
-    // Handle CORS preflight
-    if (request.method === 'OPTIONS') {
-        return corsPreflightResponse();
-    }
-
-    const startTime = Date.now();
-    const url = new URL(request.url);
-    const targetUrl = AEGIR_API + path + url.search;
-
-    try {
-        // Forward request to Aegir API
-        const response = await fetch(targetUrl, {
-            method: request.method,
-            headers: {
-                'Content-Type': 'application/json;charset=UTF-8',
-                'User-Agent': request.headers.get('User-Agent') || '',
-            },
-            body: request.method !== 'GET' ? await request.text() : undefined,
-        });
-        const elapsed = Date.now() - startTime;
-
-        // Parse original response and inject elapsed time
-        const contentType = response.headers.get('Content-Type') || '';
-        if (contentType.includes('application/json')) {
-            const originalData = await response.json() as Record<string, unknown>;
-            const newData = { ...originalData, elapsed };
-            return new Response(JSON.stringify(newData), {
-                status: response.status,
-                statusText: response.statusText,
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...CORS_HEADERS,
-                },
-            });
-        }
-
-        // For non-JSON responses, return as-is
-        return new Response(response.body, {
-            status: response.status,
-            statusText: response.statusText,
-            headers: {
-                ...Object.fromEntries(response.headers),
-                ...CORS_HEADERS,
-            },
-        });
-    } catch (error) {
-        console.error('Aegir proxy error:', error);
-        return new Response(
-            JSON.stringify({
-                success: false,
-                error: error instanceof Error ? error.message : 'Failed to reach Aegir API',
-            }),
-            {
-                status: 502,
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...CORS_HEADERS,
-                },
-            }
-        );
-    }
+function mockIcon(dimensions: { width: number; height: number }): PercentPoint[] {
+	return [
+		{ x_percent: 25, y_percent: 55 },
+		{ x_percent: 50, y_percent: 65 },
+		{ x_percent: 75, y_percent: 50 },
+	];
 }
+
+/**
+ * Generate mock word response
+ */
+function mockWord(dimensions: { width: number; height: number }): PercentPoint[] {
+	return [
+		{ x_percent: 20, y_percent: 50 },
+		{ x_percent: 40, y_percent: 60 },
+		{ x_percent: 60, y_percent: 45 },
+		{ x_percent: 80, y_percent: 55 },
+	];
+}
+
+export const aegirSolver: Solver = {
+	name: 'aegir',
+
+	supported: [{ vendor: 'geetest', types: ['slider', 'icon', 'word'] }],
+
+	isConfigured(_env: Env): boolean {
+		// Aegir doesn't require configuration (hardcoded endpoint)
+		return true;
+	},
+
+	async solve(
+		_env: Env,
+		vendor: CaptchaVendor,
+		type: CaptchaType,
+		imageData: ImageData
+	): Promise<PercentPoint[]> {
+		// TODO: Replace with actual Aegir API call when response format is known
+		// const response = await fetch(`${AEGIR_API}/${vendor}/${type}`, {
+		//     method: 'POST',
+		//     headers: { 'Content-Type': 'application/json' },
+		//     body: JSON.stringify({ image: imageData.base64Data }),
+		// });
+
+		switch (type) {
+			case 'slider':
+				return mockSlider(imageData.dimensions);
+			case 'icon':
+				return mockIcon(imageData.dimensions);
+			case 'word':
+				return mockWord(imageData.dimensions);
+			default:
+				throw new Error(`Unsupported captcha type: ${type}`);
+		}
+	},
+};
