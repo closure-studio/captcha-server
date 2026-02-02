@@ -10,7 +10,7 @@ import type { Solver, CaptchaVendor, CaptchaType, ImageData, PercentPoint } from
 import { parseJsonResponse, validatePercentPoint, validatePercentPoints } from '../utils';
 import { DEFAULT_PROMPTS } from '../prompts';
 
-const MODEL = 'gemini-2.5-flash';
+const MODEL = 'gemini-3-flash-preview';
 
 /**
  * Call Gemini vision model with a prompt and image.
