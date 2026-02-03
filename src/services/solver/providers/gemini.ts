@@ -16,15 +16,15 @@ const MODEL = 'gemini-3-pro-preview';
  * Call Gemini vision model with a prompt and image.
  */
 async function callGeminiVision(env: Env, prompt: string, mimeType: string, base64Data: string): Promise<string> {
-	// const ai = new GoogleGenAI({
-	// 	apiKey: env.GEMINI_API_KEY,
-	// 	httpOptions: {
-	// 		baseUrl: env.GEMINI_BASE_URL,
-	// 	},
-	// });
 	const ai = new GoogleGenAI({
 		apiKey: env.GEMINI_API_KEY,
+		httpOptions: {
+			baseUrl: env.GEMINI_BASE_URL,
+		},
 	});
+	// const ai = new GoogleGenAI({
+	// 	apiKey: env.GEMINI_API_KEY,
+	// });
 	const response = await ai.models.generateContent({
 		model: MODEL,
 		contents: [
