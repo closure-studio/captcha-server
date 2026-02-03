@@ -129,13 +129,15 @@ async function callNvidiaVision(env: Env, prompt: string, mimeType: string, base
 
 	const data = (await response.json()) as NvidiaResponse;
 
+	console.log('NVIDIA API response:', JSON.stringify(data));
+
 	if (!data.choices || data.choices.length === 0) {
-		throw new Error('Empty response from NVIDIA API');
+		throw new Error(`Empty response from NVIDIA API: ${JSON.stringify(data)}`);
 	}
 
 	const text = data.choices[0].message.content;
 	if (!text) {
-		throw new Error('Empty content in NVIDIA API response');
+		throw new Error(`Empty content in NVIDIA API response: ${JSON.stringify(data)}`);
 	}
 
 	return text;
