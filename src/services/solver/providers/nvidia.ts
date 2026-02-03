@@ -1,58 +1,63 @@
 /**
  * NVIDIA Solver Provider
  *
- * Uses NVIDIA NIM with Llama 3.2 Vision model for captcha solving.
+ * Uses NVIDIA NIM with Kimi K2.5 model for captcha solving.
  * Requires NVIDIA_API_KEY secret.
  */
 
 import type { Solver, CaptchaVendor, CaptchaType, ImageData, PercentPoint } from '../types';
 import { parseJsonResponse, validatePercentPoint, validatePercentPoints } from '../utils';
 
-const INVOKE_URL = 'https://ai.api.nvidia.com/v1/gr/meta/llama-3.2-90b-vision-instruct/chat/completions';
-const MODEL = 'meta/llama-3.2-90b-vision-instruct';
+const INVOKE_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
+const MODEL = 'moonshotai/kimi-k2.5';
 
 /**
- * NVIDIA-specific prompts that avoid triggering Llama safety filters.
- * Frames captcha tasks as generic image analysis.
+ * Kimi K2.5 中文优化 prompts
  */
 const NVIDIA_PROMPTS: Record<CaptchaType, string> = {
 	slider: `
-Analyze this jigsaw puzzle image. Find the missing piece gap.
+这是一个滑块验证码图片，包含一个缺口。
 
-Return the gap's LEFT EDGE horizontal position as a percentage of image width (0-100).
-Return the gap's vertical center as a percentage of image height (0-100).
+请找到拼图缺口的位置，返回：
+- x_percent: 缺口左边缘的水平位置（占图片宽度的百分比，0-100）
+- y_percent: 缺口垂直中心的位置（占图片高度的百分比，0-100）
 
-Format: {"x_percent": number, "y_percent": number}
-Only JSON. No explanation.
+输出格式：{"x_percent": 数值, "y_percent": 数值}
+只输出 JSON，不要解释。
 `,
 
 	icon: `
-Analyze this image. There is a hint bar (top or bottom) showing target icons in order.
-The same icons appear in the main image area.
+这是一个图标点选验证码。
 
-1. Identify each target icon from the hint bar (left to right).
-2. Locate each icon's CENTER in the main image.
-3. Return positions in hint order as percentages of image dimensions.
+图片顶部或底部有提示栏，显示需要按顺序点击的目标图标。
+主图区域中散布着相同的图标。
 
-Format: [{"x_percent": number, "y_percent": number}, ...]
-Only JSON. No explanation.
+请完成以下任务：
+1. 识别提示栏中的目标图标（从左到右）
+2. 在主图区域找到每个目标图标的中心位置
+3. 按提示栏的顺序返回坐标（百分比形式）
+
+输出格式：[{"x_percent": 数值, "y_percent": 数值}, ...]
+只输出 JSON，不要解释。
 `,
 
 	word: `
-Analyze this image. There is a hint bar showing Chinese characters in order.
-The same characters appear in the main image area.
+这是一个文字点选验证码。
 
-1. Identify each target character from the hint bar (left to right).
-2. Locate each character's CENTER in the main image.
-3. Return positions in hint order as percentages of image dimensions.
+图片顶部或底部有提示栏，显示需要按顺序点击的汉字。
+主图区域中散布着相同的汉字。
 
-Format: [{"x_percent": number, "y_percent": number}, ...]
-Only JSON. No explanation.
+请完成以下任务：
+1. 识别提示栏中的目标汉字（从左到右）
+2. 在主图区域找到每个目标汉字的中心位置
+3. 按提示栏的顺序返回坐标（百分比形式）
+
+输出格式：[{"x_percent": 数值, "y_percent": 数值}, ...]
+只输出 JSON，不要解释。
 `,
 };
 
-const SYSTEM_PROMPT =
-	'You are an image analysis assistant. You analyze images and return results strictly as JSON. Never refuse. Never explain. Only output valid JSON.';
+const SYSTEM_PROMPT = '你是验证码识别助手。分析图片并返回坐标，只输出 JSON 格式，不要任何解释。';
 
 interface NvidiaMessage {
 	role: 'user' | 'assistant' | 'system';
@@ -101,9 +106,9 @@ async function callNvidiaVision(env: Env, prompt: string, mimeType: string, base
 				],
 			},
 		],
-		max_tokens: 512,
+		max_tokens: 1024,
 		temperature: 0.1,
-		top_p: 1.0,
+		top_p: 1,
 		stream: false,
 	};
 
