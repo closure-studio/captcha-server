@@ -13,16 +13,18 @@ const MODEL = 'moonshotai/kimi-k2.5';
 
 /**
  * Kimi K2.5 中文优化 prompts
+ * 注意：必须强调使用 0-100 的整数百分比
  */
 const NVIDIA_PROMPTS: Record<CaptchaType, string> = {
 	slider: `
 这是一个滑块验证码图片，包含一个缺口。
 
 请找到拼图缺口的位置，返回：
-- x_percent: 缺口左边缘的水平位置（占图片宽度的百分比，0-100）
-- y_percent: 缺口垂直中心的位置（占图片高度的百分比，0-100）
+- x_percent: 缺口左边缘的水平位置，用 0-100 的整数表示（例如 65 表示 65%）
+- y_percent: 缺口垂直中心的位置，用 0-100 的整数表示（例如 48 表示 48%）
 
-输出格式：{"x_percent": 数值, "y_percent": 数值}
+示例：{"x_percent": 65, "y_percent": 48}
+
 只输出 JSON，不要解释。
 `,
 
@@ -35,9 +37,12 @@ const NVIDIA_PROMPTS: Record<CaptchaType, string> = {
 请完成以下任务：
 1. 识别提示栏中的目标图标（从左到右）
 2. 在主图区域找到每个目标图标的中心位置
-3. 按提示栏的顺序返回坐标（百分比形式）
+3. 按提示栏的顺序返回坐标
 
-输出格式：[{"x_percent": 数值, "y_percent": 数值}, ...]
+坐标使用 0-100 的整数百分比（例如 40 表示 40%，不要用 0.4）
+
+示例：[{"x_percent": 25, "y_percent": 60}, {"x_percent": 70, "y_percent": 45}]
+
 只输出 JSON，不要解释。
 `,
 
@@ -50,9 +55,12 @@ const NVIDIA_PROMPTS: Record<CaptchaType, string> = {
 请完成以下任务：
 1. 识别提示栏中的目标汉字（从左到右）
 2. 在主图区域找到每个目标汉字的中心位置
-3. 按提示栏的顺序返回坐标（百分比形式）
+3. 按提示栏的顺序返回坐标
 
-输出格式：[{"x_percent": 数值, "y_percent": 数值}, ...]
+坐标使用 0-100 的整数百分比（例如 40 表示 40%，不要用 0.4）
+
+示例：[{"x_percent": 40, "y_percent": 28}, {"x_percent": 60, "y_percent": 48}, {"x_percent": 16, "y_percent": 72}]
+
 只输出 JSON，不要解释。
 `,
 };
