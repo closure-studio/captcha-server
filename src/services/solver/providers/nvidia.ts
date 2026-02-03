@@ -71,6 +71,7 @@ interface NvidiaRequest {
 	temperature: number;
 	top_p: number;
 	stream: boolean;
+	chat_template_kwargs?: { thinking: boolean };
 }
 
 interface NvidiaResponse {
@@ -106,10 +107,11 @@ async function callNvidiaVision(env: Env, prompt: string, mimeType: string, base
 				],
 			},
 		],
-		max_tokens: 1024,
+		max_tokens: 512,
 		temperature: 0.1,
 		top_p: 1,
 		stream: false,
+		chat_template_kwargs: { thinking: false },
 	};
 
 	const response = await fetch(INVOKE_URL, {
