@@ -85,40 +85,22 @@ interface NvidiaRequest {
 	temperature: number;
 	top_p: number;
 	stream: boolean;
+	thinking?: { type: 'disabled' };
 }
 
 interface NvidiaResponse {
 	choices: Array<{
 		message: {
 			content: string | null;
-			reasoning?: string;
-			reasoning_content?: string;
 		};
 		finish_reason: string;
 	}>;
 }
 
 /**
- * Extract the last JSON array or object from reasoning text.
- * The model's reasoning typically ends with the final JSON answer.
- */
-function extractJsonFromReasoning(reasoning: string): string | null {
-	// Match the last JSON array [...] or object {...} in the text
-	const matches = reasoning.match(/(\[[\s\S]*?\]|\{[\s\S]*?\})/g);
-	if (!matches || matches.length === 0) {
-		return null;
-	}
-	// Return the last match - the model typically arrives at the final answer last
-	return matches[matches.length - 1];
-}
-
-/**
  * Call NVIDIA NIM Vision API.
  *
- * Kimi K2.5 is a reasoning model. With thinking enabled, it puts the
- * step-by-step reasoning in the `reasoning`/`reasoning_content` field
- * and the final answer in `content`. If content is null (e.g. truncated),
- * we fall back to extracting JSON from the reasoning text.
+ * Kimi K2.5 with thinking disabled - returns direct JSON answer in content.
  */
 async function callNvidiaVision(env: Env, prompt: string, mimeType: string, base64Data: string): Promise<string> {
 	const dataUrl = `data:${mimeType};base64,${base64Data}`;
@@ -142,6 +124,7 @@ async function callNvidiaVision(env: Env, prompt: string, mimeType: string, base
 		temperature: 0.1,
 		top_p: 1,
 		stream: false,
+		thinking: { type: 'disabled' },
 	};
 
 	const response = await fetch(INVOKE_URL, {
@@ -167,21 +150,11 @@ async function callNvidiaVision(env: Env, prompt: string, mimeType: string, base
 
 	const msg = data.choices[0].message;
 
-	// Prefer content (direct answer), fall back to reasoning extraction
-	if (msg.content) {
-		return msg.content;
+	if (!msg.content) {
+		throw new Error(`No content in NVIDIA API response. finish_reason: ${data.choices[0].finish_reason}`);
 	}
 
-	// When thinking is enabled, content may be null - extract from reasoning
-	const reasoning = msg.reasoning_content || msg.reasoning;
-	if (reasoning) {
-		const extracted = extractJsonFromReasoning(reasoning);
-		if (extracted) {
-			return extracted;
-		}
-	}
-
-	throw new Error(`No usable content in NVIDIA API response. finish_reason: ${data.choices[0].finish_reason}`);
+	return msg.content;
 }
 
 export const nvidiaSolver: Solver = {
