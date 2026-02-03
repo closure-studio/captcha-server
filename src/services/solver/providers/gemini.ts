@@ -15,28 +15,22 @@ const MODEL = 'gemini-3-pro-preview';
 /**
  * Call Gemini vision model with a prompt and image.
  */
-async function callGeminiVision(
-	env: Env,
-	prompt: string,
-	mimeType: string,
-	base64Data: string
-): Promise<string> {
+async function callGeminiVision(env: Env, prompt: string, mimeType: string, base64Data: string): Promise<string> {
+	// const ai = new GoogleGenAI({
+	// 	apiKey: env.GEMINI_API_KEY,
+	// 	httpOptions: {
+	// 		baseUrl: env.GEMINI_BASE_URL,
+	// 	},
+	// });
 	const ai = new GoogleGenAI({
 		apiKey: env.GEMINI_API_KEY,
-		httpOptions: {
-			baseUrl: env.GEMINI_BASE_URL,
-		},
 	});
-
 	const response = await ai.models.generateContent({
 		model: MODEL,
 		contents: [
 			{
 				role: 'user',
-				parts: [
-					{ text: prompt },
-					{ inlineData: { mimeType, data: base64Data } },
-				],
+				parts: [{ text: prompt }, { inlineData: { mimeType, data: base64Data } }],
 			},
 		],
 		config: {
@@ -61,12 +55,7 @@ export const geminiSolver: Solver = {
 		return !!(env.GEMINI_API_KEY && env.GEMINI_BASE_URL);
 	},
 
-	async solve(
-		env: Env,
-		_vendor: CaptchaVendor,
-		type: CaptchaType,
-		imageData: ImageData
-	): Promise<PercentPoint[]> {
+	async solve(env: Env, _vendor: CaptchaVendor, type: CaptchaType, imageData: ImageData): Promise<PercentPoint[]> {
 		const prompt = DEFAULT_PROMPTS[type];
 		const text = await callGeminiVision(env, prompt, imageData.mimeType, imageData.base64Data);
 
