@@ -84,6 +84,38 @@ export function updateTaskResultStatement(db: D1Database, req: SubmitResultReque
 }
 
 /**
+ * Statement to insert task with result (for tasks not pre-created in D1)
+ */
+export function insertTaskWithResultStatement(db: D1Database, req: SubmitResultRequest, now: number) {
+    const result = req.result;
+    return db
+        .prepare(
+            `INSERT INTO captcha_tasks
+             (task_id, challenge, provider, geetest_id, captcha_type, risk_type, status,
+              lot_number, captcha_output, pass_token, gen_time, error_message,
+              created_at, completed_at, duration_ms)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        )
+        .bind(
+            req.taskId,
+            req.challenge ?? null,
+            req.provider ?? 'geetest_v4',
+            req.geetestId ?? null,
+            req.captchaType ?? null,
+            req.riskType ?? null,
+            req.status,
+            result?.lot_number ?? null,
+            result?.captcha_output ?? null,
+            result?.pass_token ?? null,
+            result?.gen_time ?? null,
+            req.errorMessage ?? null,
+            now,
+            now,
+            req.duration ?? null
+        );
+}
+
+/**
  * Statement to insert recognition attempt
  */
 export function insertRecognitionStatement(

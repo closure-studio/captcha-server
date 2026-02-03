@@ -155,6 +155,23 @@ export function validateSubmitResultRequest(data: unknown): data is SubmitResult
         }
     }
 
+    // Validate optional task origin fields
+    if (req.challenge !== undefined && typeof req.challenge !== 'string') {
+        return false;
+    }
+    if (req.geetestId !== undefined && typeof req.geetestId !== 'string') {
+        return false;
+    }
+    if (req.provider !== undefined && !VALID_PROVIDERS.includes(req.provider as string)) {
+        return false;
+    }
+    if (req.captchaType !== undefined && !VALID_CAPTCHA_TYPES.includes(req.captchaType as string)) {
+        return false;
+    }
+    if (req.riskType !== undefined && typeof req.riskType !== 'string') {
+        return false;
+    }
+
     return true;
 }
 

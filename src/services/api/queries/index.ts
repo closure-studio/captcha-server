@@ -7,6 +7,7 @@ export {
     getTaskQuery,
     createTaskStatement,
     updateTaskResultStatement,
+    insertTaskWithResultStatement,
     insertRecognitionStatement,
     insertBypassStatement,
     insertAssetStatement,

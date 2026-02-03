@@ -12,6 +12,7 @@ import {
     getTaskQuery,
     createTaskStatement,
     updateTaskResultStatement,
+    insertTaskWithResultStatement,
     insertRecognitionStatement,
     insertBypassStatement,
     insertAssetStatement,
@@ -92,17 +93,19 @@ export async function handleSubmitResult(
         return jsonResponse({ success: false, error: 'Invalid request body' }, 400);
     }
 
-    // Verify task exists
+    // Check if task already exists in D1
     const existingTask = await getTaskQuery(env.DB, taskId).first();
-    if (!existingTask) {
-        return jsonResponse({ success: false, error: 'Task not found' }, 404);
-    }
 
     const now = Date.now();
     const statements: D1PreparedStatement[] = [];
 
-    // Update task status and result
-    statements.push(updateTaskResultStatement(env.DB, body, now));
+    if (existingTask) {
+        // Task exists: update with result
+        statements.push(updateTaskResultStatement(env.DB, body, now));
+    } else {
+        // Task not in D1: insert with task origin info from request body
+        statements.push(insertTaskWithResultStatement(env.DB, body, now));
+    }
 
     // Insert recognition attempts (support both single and array)
     const recognitions = body.recognitions ?? (body.recognition ? [body.recognition] : []);

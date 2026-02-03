@@ -140,6 +140,13 @@ export interface SubmitResultRequest {
     recognitions?: RecognitionData[];
     bypass?: BypassData;
     assets?: AssetData[];
+
+    // Task origin info (for when task is not pre-created in D1)
+    challenge?: string;
+    geetestId?: string;
+    provider?: Provider;
+    captchaType?: CaptchaType;
+    riskType?: string;
 }
 
 /**
