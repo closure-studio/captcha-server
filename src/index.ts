@@ -19,7 +19,7 @@
  */
 
 import { jsonResponse, corsPreflightResponse } from './utils';
-import { handleStoreRequest, handleSolverRequest } from './services';
+import { handleStoreRequest, handleSolverRequest, handleApiRequest } from './services';
 
 /**
  * Service route configuration
@@ -27,6 +27,7 @@ import { handleStoreRequest, handleSolverRequest } from './services';
 const SERVICE_ROUTES = {
     STORE: '/store',
     SOLVER: '/solver',
+    API: '/api',
 } as const;
 
 /**
@@ -63,6 +64,12 @@ export default {
         if (pathname.startsWith(SERVICE_ROUTES.SOLVER)) {
             const servicePath = pathname.substring(SERVICE_ROUTES.SOLVER.length) || '/';
             return handleSolverRequest(request, env, servicePath);
+        }
+
+        // Route to API service: /api/*
+        if (pathname.startsWith(SERVICE_ROUTES.API)) {
+            const servicePath = pathname.substring(SERVICE_ROUTES.API.length) || '/';
+            return handleApiRequest(request, env, servicePath);
         }
 
         return jsonResponse({ success: false, error: 'Not found' }, 404);

@@ -18,7 +18,14 @@
 	],
 	"ai": {
 		"binding": "AI"
-	}
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "captcha-db",
+			"database_id": "254f4f5f-73a2-440e-a618-8ad5ba7c6051"
+		}
+	]
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
