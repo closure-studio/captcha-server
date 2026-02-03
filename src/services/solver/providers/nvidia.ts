@@ -85,23 +85,40 @@ interface NvidiaRequest {
 	temperature: number;
 	top_p: number;
 	stream: boolean;
-	chat_template_kwargs?: { thinking: boolean };
 }
 
 interface NvidiaResponse {
 	choices: Array<{
 		message: {
-			content: string;
+			content: string | null;
+			reasoning?: string;
+			reasoning_content?: string;
 		};
+		finish_reason: string;
 	}>;
+}
+
+/**
+ * Extract the last JSON array or object from reasoning text.
+ * The model's reasoning typically ends with the final JSON answer.
+ */
+function extractJsonFromReasoning(reasoning: string): string | null {
+	// Match the last JSON array [...] or object {...} in the text
+	const matches = reasoning.match(/(\[[\s\S]*?\]|\{[\s\S]*?\})/g);
+	if (!matches || matches.length === 0) {
+		return null;
+	}
+	// Return the last match - the model typically arrives at the final answer last
+	return matches[matches.length - 1];
 }
 
 /**
  * Call NVIDIA NIM Vision API.
  *
- * Per NVIDIA docs:
- * - system/assistant roles only support string content
- * - user role supports object array with image_url type
+ * Kimi K2.5 is a reasoning model. With thinking enabled, it puts the
+ * step-by-step reasoning in the `reasoning`/`reasoning_content` field
+ * and the final answer in `content`. If content is null (e.g. truncated),
+ * we fall back to extracting JSON from the reasoning text.
  */
 async function callNvidiaVision(env: Env, prompt: string, mimeType: string, base64Data: string): Promise<string> {
 	const dataUrl = `data:${mimeType};base64,${base64Data}`;
@@ -121,11 +138,10 @@ async function callNvidiaVision(env: Env, prompt: string, mimeType: string, base
 				],
 			},
 		],
-		max_tokens: 512,
+		max_tokens: 16384,
 		temperature: 0.1,
 		top_p: 1,
 		stream: false,
-		chat_template_kwargs: { thinking: false },
 	};
 
 	const response = await fetch(INVOKE_URL, {
@@ -149,12 +165,23 @@ async function callNvidiaVision(env: Env, prompt: string, mimeType: string, base
 		throw new Error(`Empty response from NVIDIA API: ${JSON.stringify(data)}`);
 	}
 
-	const text = data.choices[0].message.content;
-	if (!text) {
-		throw new Error(`Empty content in NVIDIA API response: ${JSON.stringify(data)}`);
+	const msg = data.choices[0].message;
+
+	// Prefer content (direct answer), fall back to reasoning extraction
+	if (msg.content) {
+		return msg.content;
 	}
 
-	return text;
+	// When thinking is enabled, content may be null - extract from reasoning
+	const reasoning = msg.reasoning_content || msg.reasoning;
+	if (reasoning) {
+		const extracted = extractJsonFromReasoning(reasoning);
+		if (extracted) {
+			return extracted;
+		}
+	}
+
+	throw new Error(`No usable content in NVIDIA API response. finish_reason: ${data.choices[0].finish_reason}`);
 }
 
 export const nvidiaSolver: Solver = {
