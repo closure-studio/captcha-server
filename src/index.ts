@@ -19,7 +19,7 @@
  */
 
 import { jsonResponse, corsPreflightResponse } from './utils';
-import { handleStoreRequest, handleSolverRequest, handleApiRequest } from './services';
+import { handleStoreRequest, handleSolverRequest, handleApiRequest, handleCaptchaRequest } from './services';
 
 /**
  * Service route configuration
@@ -28,6 +28,7 @@ const SERVICE_ROUTES = {
     STORE: '/store',
     SOLVER: '/solver',
     API: '/api',
+    CAPTCHA: '/captcha',
 } as const;
 
 /**
@@ -70,6 +71,12 @@ export default {
         if (pathname.startsWith(SERVICE_ROUTES.API)) {
             const servicePath = pathname.substring(SERVICE_ROUTES.API.length) || '/';
             return handleApiRequest(request, env, servicePath);
+        }
+
+        // Route to Captcha proxy service: /captcha/*
+        if (pathname.startsWith(SERVICE_ROUTES.CAPTCHA)) {
+            const servicePath = pathname.substring(SERVICE_ROUTES.CAPTCHA.length) || '/';
+            return handleCaptchaRequest(request, env, servicePath);
         }
 
         return jsonResponse({ success: false, error: 'Not found' }, 404);
