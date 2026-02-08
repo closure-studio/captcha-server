@@ -33,7 +33,7 @@ async function gt3Register(): Promise<Response> {
 
 		if (result.challenge && result.challenge.length === 32) {
 			const challenge = await md5(result.challenge + GT3_KEY);
-			return jsonResponse({ code: 0, data: [{ gt: GT3_ID, challenge, new_captcha: true }], error: null });
+			return jsonResponse({ success: true, data: [{ gt: GT3_ID, challenge, new_captcha: true }] });
 		}
 	} catch {
 		// fall through to offline mode
