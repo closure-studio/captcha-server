@@ -33,7 +33,7 @@ async function gt3Register(): Promise<Response> {
 
 		if (result.challenge && result.challenge.length === 32) {
 			const challenge = await md5(result.challenge + GT3_KEY);
-			return jsonResponse({ success: 1, gt: GT3_ID, challenge, new_captcha: true });
+			return jsonResponse({ code: 0, data: [{  gt: GT3_ID, challenge, new_captcha: true }], error: null });
 		}
 	} catch {
 		// fall through to offline mode
@@ -43,7 +43,7 @@ async function gt3Register(): Promise<Response> {
 	const bytes = new Uint8Array(16);
 	crypto.getRandomValues(bytes);
 	const challenge = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
-	return jsonResponse({ success: 0, gt: GT3_ID, challenge, new_captcha: true });
+	return jsonResponse({ code: 0, data: { success: 0, gt: GT3_ID, challenge, new_captcha: true }, error: null });
 }
 
 /**
@@ -57,7 +57,7 @@ async function gt3Validate(body: {
 	const { geetest_challenge, geetest_validate, geetest_seccode } = body;
 
 	if (!geetest_challenge || !geetest_validate || !geetest_seccode) {
-		return jsonResponse({ success: false, error: 'Missing required fields: geetest_challenge, geetest_validate, geetest_seccode' }, 400);
+		return jsonResponse({ code: 400, data: null, error: 'Missing required fields: geetest_challenge, geetest_validate, geetest_seccode' }, 400);
 	}
 
 	try {
@@ -79,12 +79,12 @@ async function gt3Validate(body: {
 		const expected = await md5(geetest_seccode);
 
 		if (result.seccode === expected) {
-			return jsonResponse({ success: true, message: 'Captcha validated' });
+			return jsonResponse({ code: 0, data: { message: 'Captcha validated' }, error: null });
 		}
 
-		return jsonResponse({ success: false, error: 'Captcha validation failed' }, 403);
+		return jsonResponse({ code: 403, data: null, error: 'Captcha validation failed' }, 403);
 	} catch {
-		return jsonResponse({ success: false, error: 'Validation request failed' }, 500);
+		return jsonResponse({ code: 500, data: null, error: 'Validation request failed' }, 500);
 	}
 }
 
@@ -157,5 +157,5 @@ export async function handleCaptchaRequest(
 		// return proxyToUpstream(env, 'POST', '/system/captcha/resp', body);
 	}
 
-	return jsonResponse({ success: false, error: 'Not found' }, 404);
+	return jsonResponse({ code: 404, data: null, error: 'Not found' }, 404);
 }
