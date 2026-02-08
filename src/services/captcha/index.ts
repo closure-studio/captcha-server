@@ -125,27 +125,27 @@ export async function handleCaptchaRequest(request: Request, env: Env, path: str
 
 	// GET /captcha/reqs - GeeTest GT3 register
 	if (path === '/reqs' && method === 'GET') {
-		return gt3Register();
+		// return gt3Register();
 
 		// --- Old: proxy to upstream ---
-		// const url = new URL(request.url);
-		// const limit = url.searchParams.get('limit');
-		// const query = limit ? `?limit=${limit}` : '';
-		// return proxyToUpstream(env, 'GET', `/system/captcha/reqs${query}`);
+		const url = new URL(request.url);
+		const limit = url.searchParams.get('limit');
+		const query = limit ? `?limit=${limit}` : '';
+		return proxyToUpstream(env, 'GET', `/system/captcha/reqs${query}`);
 	}
 
 	// POST /captcha/resp - GeeTest GT3 validate
 	if (path === '/resp' && method === 'POST') {
-		const body = (await request.json()) as {
-			geetest_challenge: string;
-			geetest_validate: string;
-			geetest_seccode: string;
-		};
-		return gt3Validate(body);
+		// const body = (await request.json()) as {
+		// 	geetest_challenge: string;
+		// 	geetest_validate: string;
+		// 	geetest_seccode: string;
+		// };
+		// return gt3Validate(body);
 
 		// --- Old: proxy to upstream ---
-		// const body = await request.text();
-		// return proxyToUpstream(env, 'POST', '/system/captcha/resp', body);
+		const body = await request.text();
+		return proxyToUpstream(env, 'POST', '/system/captcha/resp', body);
 	}
 
 	return jsonResponse({ code: 404, data: null, error: 'Not found' }, 404);
