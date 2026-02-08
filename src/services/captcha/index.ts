@@ -33,7 +33,7 @@ async function gt3Register(): Promise<Response> {
 
 		if (result.challenge && result.challenge.length === 32) {
 			const challenge = await md5(result.challenge + GT3_KEY);
-			return jsonResponse({ code: 0, data: [{  gt: GT3_ID, challenge, new_captcha: true }], error: null });
+			return jsonResponse({ code: 0, data: [{ gt: GT3_ID, challenge, new_captcha: true }], error: null });
 		}
 	} catch {
 		// fall through to offline mode
@@ -49,15 +49,14 @@ async function gt3Register(): Promise<Response> {
 /**
  * GeeTest GT3 Validate - secondary server-side validation
  */
-async function gt3Validate(body: {
-	geetest_challenge: string;
-	geetest_validate: string;
-	geetest_seccode: string;
-}): Promise<Response> {
+async function gt3Validate(body: { geetest_challenge: string; geetest_validate: string; geetest_seccode: string }): Promise<Response> {
 	const { geetest_challenge, geetest_validate, geetest_seccode } = body;
 
 	if (!geetest_challenge || !geetest_validate || !geetest_seccode) {
-		return jsonResponse({ code: 400, data: null, error: 'Missing required fields: geetest_challenge, geetest_validate, geetest_seccode' }, 400);
+		return jsonResponse(
+			{ code: 400, data: null, error: 'Missing required fields: geetest_challenge, geetest_validate, geetest_seccode' },
+			400,
+		);
 	}
 
 	try {
@@ -93,12 +92,7 @@ async function gt3Validate(body: {
 /**
  * Forward a request to the upstream captcha server
  */
-async function proxyToUpstream(
-	env: Env,
-	method: string,
-	upstreamPath: string,
-	body?: string | null,
-): Promise<Response> {
+async function proxyToUpstream(env: Env, method: string, upstreamPath: string, body?: string | null): Promise<Response> {
 	const host = env.CAPTCHA_SERVER_HOST.replace(/\/+$/, '');
 	const url = `${host}${upstreamPath}`;
 
@@ -125,11 +119,7 @@ async function proxyToUpstream(
 /**
  * Handle captcha service requests
  */
-export async function handleCaptchaRequest(
-	request: Request,
-	env: Env,
-	path: string,
-): Promise<Response> {
+export async function handleCaptchaRequest(request: Request, env: Env, path: string): Promise<Response> {
 	const method = request.method;
 
 	// GET /captcha/reqs - GeeTest GT3 register
