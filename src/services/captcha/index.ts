@@ -10,8 +10,10 @@ import { jsonResponse } from '../../utils';
 
 // ==================== GeeTest GT3 ====================
 
-const GT3_ID = 'f23ae14ba3a5bd01d1d65288422dbf97';
-const GT3_KEY = '0fcfd8e505bf5d2c94db0bd92adbdaa9';
+// const GT3_ID = 'f23ae14ba3a5bd01d1d65288422dbf97';
+// const GT3_KEY = '0fcfd8e505bf5d2c94db0bd92adbdaa9';
+const GT3_ID = 'c9c4facd1a6feeb80802222cbb74ca8e';
+const GT3_KEY = 'e4e298788aa8c768397639deb9b249a9';
 const GEETEST_API = 'https://api.geetest.com';
 
 /**
@@ -47,10 +49,16 @@ async function gt3Register(): Promise<Response> {
 	return jsonResponse({ code: 0, data: { success: 0, gt: GT3_ID, challenge, new_captcha: true }, error: null });
 }
 
+interface Gt3ValidateParams {
+	geetest_challenge: string;
+	geetest_validate: string;
+	geetest_seccode: string;
+}
+
 /**
  * GeeTest GT3 Validate - secondary server-side validation
  */
-async function gt3Validate(body: { geetest_challenge: string; geetest_validate: string; geetest_seccode: string }): Promise<Response> {
+async function gt3Validate(body: Gt3ValidateParams): Promise<Response> {
 	const { geetest_challenge, geetest_validate, geetest_seccode } = body;
 
 	if (!geetest_challenge || !geetest_validate || !geetest_seccode) {
@@ -125,7 +133,7 @@ export async function handleCaptchaRequest(request: Request, env: Env, path: str
 
 	// GET /captcha/reqs - GeeTest GT3 register
 	if (path === '/reqs' && method === 'GET') {
-		// return gt3Register();
+		return gt3Register();
 
 		// --- Old: proxy to upstream ---
 		const url = new URL(request.url);
@@ -136,16 +144,12 @@ export async function handleCaptchaRequest(request: Request, env: Env, path: str
 
 	// POST /captcha/resp - GeeTest GT3 validate
 	if (path === '/resp' && method === 'POST') {
-		// const body = (await request.json()) as {
-		// 	geetest_challenge: string;
-		// 	geetest_validate: string;
-		// 	geetest_seccode: string;
-		// };
-		// return gt3Validate(body);
+		const body = (await request.json()) as Gt3ValidateParams;
+		return gt3Validate(body);
 
 		// --- Old: proxy to upstream ---
-		const body = await request.text();
-		return proxyToUpstream(env, 'POST', '/system/captcha/resp', body);
+		// const body = await request.text();
+		// return proxyToUpstream(env, 'POST', '/system/captcha/resp', body);
 	}
 
 	return jsonResponse({ code: 404, data: null, error: 'Not found' }, 404);
