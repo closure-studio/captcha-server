@@ -133,7 +133,7 @@ export async function handleCaptchaRequest(request: Request, env: Env, path: str
 
 	// GET /captcha/reqs - GeeTest GT3 register
 	if (path === '/reqs' && method === 'GET') {
-		return gt3Register();
+		// return gt3Register();
 
 		// --- Old: proxy to upstream ---
 		const url = new URL(request.url);
@@ -144,12 +144,12 @@ export async function handleCaptchaRequest(request: Request, env: Env, path: str
 
 	// POST /captcha/resp - GeeTest GT3 validate
 	if (path === '/resp' && method === 'POST') {
-		const body = (await request.json()) as Gt3ValidateParams;
-		return gt3Validate(body);
+		// const body = (await request.json()) as Gt3ValidateParams;
+		// return gt3Validate(body);
 
 		// --- Old: proxy to upstream ---
-		// const body = await request.text();
-		// return proxyToUpstream(env, 'POST', '/system/captcha/resp', body);
+		const body = await request.text();
+		return proxyToUpstream(env, 'POST', '/system/captcha/resp', body);
 	}
 
 	return jsonResponse({ code: 404, data: null, error: 'Not found' }, 404);
